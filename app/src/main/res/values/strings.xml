@@ -1,3 +1,27 @@
 <resources>
-    <string name="app_name">hw_cub</string>
+    <string name="app_name" translatable="false">hw_cub</string>
+    <string name="stock_list_title">TWSE Daily Quotes</string>
+    <string name="trade_date">Trading date: %1$s</string>
+    <string name="search_label">Search</string>
+    <string name="search_placeholder">Stock code or name</string>
+    <string name="change_up">Up %1$s</string>
+    <string name="change_down">Down %1$s</string>
+    <string name="loading">Loading quotes</string>
+    <string name="empty_no_data">No quotes available for the latest trading day.</string>
+    <string name="empty_no_matches">No stocks match “%1$s”.</string>
+    <string name="error_network">Can\'t reach TWSE. Check your connection.</string>
+    <string name="error_server">TWSE server error (%1$d).</string>
+    <string name="error_invalid_response">TWSE returned data the app couldn\'t read.</string>
+    <string name="retry">Retry</string>
+    <string name="opening_price">Open</string>
+    <string name="closing_price">Close</string>
+    <string name="highest_price">High</string>
+    <string name="lowest_price">Low</string>
+    <string name="price_change">Change</string>
+    <string name="monthly_average_price">Monthly avg</string>
+    <string name="transactions">Trades</string>
+    <string name="trade_volume">Shares</string>
+    <string name="trade_value">Value</string>
+    <string name="not_available" translatable="false">—</string>
+    <string name="menu">Menu</string>
 </resources>
