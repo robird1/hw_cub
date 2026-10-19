@@ -4,6 +4,9 @@ This is a native Android project, not Flutter. Ignore all Flutter/Dart
 guidance from the global `~/.claude/CLAUDE.md` when working in this repo;
 the rules below take precedence.
 
+When using compose-kit skills, keep MVVM and Retrofit; this file overrides
+the kit's MVI/`BaseViewModel` and Ktor conventions.
+
 ## Tech Stack
 
 - **Language:** Kotlin
