@@ -6,4 +6,10 @@ import com.example.hw_cub.core.DataResult
 interface StockRepository {
     /** Returns every listed security's summary for the latest trading day. */
     suspend fun getDailyQuotes(): DataResult<List<StockDay>>
+
+    /**
+     * Returns the latest valuation ratios for [code], or a successful `null`
+     * when TWSE publishes none for it (ETFs and other non-company securities).
+     */
+    suspend fun getValuation(code: String): DataResult<StockValuation?>
 }

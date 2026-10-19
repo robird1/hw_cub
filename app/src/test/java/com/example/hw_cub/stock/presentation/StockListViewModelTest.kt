@@ -4,6 +4,7 @@ import com.example.hw_cub.core.DataError
 import com.example.hw_cub.core.DataResult
 import com.example.hw_cub.stock.domain.StockDay
 import com.example.hw_cub.stock.domain.StockRepository
+import com.example.hw_cub.stock.domain.StockValuation
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -171,4 +172,7 @@ private class FakeStockRepository : StockRepository {
     fun complete(result: DataResult<List<StockDay>>) {
         pending.complete(result)
     }
+
+    override suspend fun getValuation(code: String): DataResult<StockValuation?> =
+        error("Not used by the list screen")
 }

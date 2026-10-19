@@ -2,7 +2,9 @@ package com.example.hw_cub.stock.data
 
 import com.example.hw_cub.stock.data.remote.StockDayAvgDto
 import com.example.hw_cub.stock.data.remote.StockDayDto
+import com.example.hw_cub.stock.data.remote.StockValuationDto
 import com.example.hw_cub.stock.domain.StockDay
+import com.example.hw_cub.stock.domain.StockValuation
 import java.math.BigDecimal
 import java.time.DateTimeException
 import java.time.LocalDate
@@ -41,6 +43,20 @@ fun List<StockDayAvgDto>.monthlyAveragesByCode(): Map<String, BigDecimal> =
         val average = row.monthlyAveragePrice.toBigDecimalOrNullSafe() ?: return@mapNotNull null
         code to average
     }.toMap()
+
+/** Maps a TWSE valuation row, or returns `null` when it has no security code. */
+fun StockValuationDto.toDomain(): StockValuation? {
+    val code = code?.trim().orEmpty()
+    if (code.isEmpty()) return null
+    return StockValuation(
+        code = code,
+        name = name?.trim().orEmpty(),
+        date = parseRocDate(date),
+        peRatio = peRatio.toBigDecimalOrNullSafe(),
+        dividendYieldPercent = dividendYield.toBigDecimalOrNullSafe(),
+        pbRatio = pbRatio.toBigDecimalOrNullSafe(),
+    )
+}
 
 /** Parses an ROC-calendar `yyyMMdd` date such as `1151016` (2026-10-16). */
 internal fun parseRocDate(value: String?): LocalDate? {

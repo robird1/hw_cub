@@ -4,12 +4,14 @@ import com.example.hw_cub.BuildConfig
 import com.example.hw_cub.stock.data.DefaultStockRepository
 import com.example.hw_cub.stock.data.remote.TwseService
 import com.example.hw_cub.stock.domain.StockRepository
+import com.example.hw_cub.stock.presentation.StockDetailViewModel
 import com.example.hw_cub.stock.presentation.StockListViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -44,10 +46,11 @@ val networkModule = module {
     single { get<Retrofit>().create(TwseService::class.java) }
 }
 
-/** Stock list feature: repository and ViewModel. */
+/** Stock feature: repository and the list and detail ViewModels. */
 val stockModule = module {
     single<StockRepository> { DefaultStockRepository(get(), Dispatchers.Default) }
     viewModelOf(::StockListViewModel)
+    viewModel { (code: String) -> StockDetailViewModel(code, get()) }
 }
 
 /** Every module the app starts Koin with. */

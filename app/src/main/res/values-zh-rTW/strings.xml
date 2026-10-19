@@ -22,4 +22,12 @@
     <string name="trade_volume">成交股數</string>
     <string name="trade_value">成交金額</string>
     <string name="menu">選單</string>
+    <string name="above_monthly_average">%1$s，高於月平均價</string>
+    <string name="below_monthly_average">%1$s，低於月平均價</string>
+    <string name="back">返回</string>
+    <string name="pe_ratio">本益比</string>
+    <string name="dividend_yield">殖利率(%)</string>
+    <string name="pb_ratio">股價淨值比</string>
+    <string name="data_date">資料日期：%1$s</string>
+    <string name="valuation_missing">證交所未提供此證券的本益比、殖利率及股價淨值比資料（例如 ETF）。</string>
 </resources>

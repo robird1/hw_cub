@@ -24,4 +24,12 @@
     <string name="trade_value">Value</string>
     <string name="not_available" translatable="false">—</string>
     <string name="menu">Menu</string>
+    <string name="above_monthly_average">%1$s, above monthly average</string>
+    <string name="below_monthly_average">%1$s, below monthly average</string>
+    <string name="back">Back</string>
+    <string name="pe_ratio">P/E ratio</string>
+    <string name="dividend_yield">Dividend yield (%)</string>
+    <string name="pb_ratio">P/B ratio</string>
+    <string name="data_date">Data date: %1$s</string>
+    <string name="valuation_missing">TWSE publishes no P/E, dividend yield or P/B data for this security (for example, ETFs).</string>
 </resources>

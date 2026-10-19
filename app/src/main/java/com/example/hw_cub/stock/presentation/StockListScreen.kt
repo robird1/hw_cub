@@ -36,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -61,7 +62,10 @@ import java.time.format.FormatStyle
 
 /** Stock list destination: wires [StockListViewModel] to [StockListScreen]. */
 @Composable
-fun StockListRoute(viewModel: StockListViewModel = koinViewModel()) {
+fun StockListRoute(
+    onStockClick: (StockDay) -> Unit,
+    viewModel: StockListViewModel = koinViewModel(),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     StockListScreen(
         state = state,
@@ -70,6 +74,7 @@ fun StockListRoute(viewModel: StockListViewModel = koinViewModel()) {
         onRefreshErrorShown = viewModel::onRefreshErrorShown,
         // Menu behavior is not defined yet; the button is visual only for now.
         onMenuClick = {},
+        onStockClick = onStockClick,
     )
 }
 
@@ -82,6 +87,7 @@ fun StockListScreen(
     onReload: () -> Unit,
     onRefreshErrorShown: () -> Unit,
     onMenuClick: () -> Unit,
+    onStockClick: (StockDay) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -99,24 +105,32 @@ fun StockListScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             SearchField(state.query, onQueryChange)
-            StockListContent(state, onReload)
+            StockListContent(state, onReload, onStockClick)
         }
     }
 }
 
 @Composable
-private fun StockListContent(state: StockListUiState, onReload: () -> Unit) {
+private fun StockListContent(
+    state: StockListUiState,
+    onReload: () -> Unit,
+    onStockClick: (StockDay) -> Unit,
+) {
     when {
         !state.hasLoaded && state.loadError != null ->
             LoadErrorState(state.loadError, onRetry = onReload)
         !state.hasLoaded -> LoadingState()
-        else -> RefreshableStockList(state, onReload)
+        else -> RefreshableStockList(state, onReload, onStockClick)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RefreshableStockList(state: StockListUiState, onRefresh: () -> Unit) {
+private fun RefreshableStockList(
+    state: StockListUiState,
+    onRefresh: () -> Unit,
+    onStockClick: (StockDay) -> Unit,
+) {
     PullToRefreshBox(
         isRefreshing = state.isLoading,
         onRefresh = onRefresh,
@@ -131,7 +145,7 @@ private fun RefreshableStockList(state: StockListUiState, onRefresh: () -> Unit)
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(state.stocks, key = StockDay::code) { stock ->
-                    StockCard(stock)
+                    StockCard(stock, onClick = { onStockClick(stock) })
                 }
             }
         }
@@ -199,8 +213,9 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit) {
 }
 
 @Composable
-private fun StockCard(stock: StockDay) {
+private fun StockCard(stock: StockDay, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -242,7 +257,7 @@ private fun PriceGrid(stock: StockDay) {
                 PriceText(stock.openingPrice)
             }
             PriceCell(stringResource(R.string.closing_price), Modifier.weight(1f)) {
-                PriceText(stock.closingPrice)
+                ClosingPriceText(stock)
             }
         }
         Row {
@@ -280,11 +295,35 @@ private fun PriceCell(label: String, modifier: Modifier, value: @Composable () -
 }
 
 @Composable
-private fun PriceText(price: BigDecimal?) {
+private fun PriceText(
+    price: BigDecimal?,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+) {
     Text(
         text = price?.toPlainString() ?: stringResource(R.string.not_available),
         style = MaterialTheme.typography.titleMedium,
+        color = color,
+        modifier = modifier,
     )
+}
+
+/** Closing price, red above the monthly average and green below it. */
+@Composable
+private fun ClosingPriceText(stock: StockDay) {
+    val colors = LocalPriceColors.current
+    val price = stock.closingPrice?.toPlainString().orEmpty()
+    val (color, description) = when (stock.closeVersusMonthlyAverage()) {
+        PriceTrend.Above ->
+            colors.up to stringResource(R.string.above_monthly_average, price)
+        PriceTrend.Below ->
+            colors.down to stringResource(R.string.below_monthly_average, price)
+        null -> Color.Unspecified to null
+    }
+    val modifier = description?.let {
+        Modifier.semantics { contentDescription = it }
+    } ?: Modifier
+    PriceText(price = stock.closingPrice, color = color, modifier = modifier)
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -334,21 +373,6 @@ private fun PriceChange(change: BigDecimal) {
 }
 
 @Composable
-private fun LoadingState() {
-    val description = stringResource(R.string.loading)
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(Modifier.semantics { contentDescription = description })
-    }
-}
-
-@Composable
-private fun LoadErrorState(error: DataError, onRetry: () -> Unit) {
-    CenteredMessage(error.message()) {
-        Button(onClick = onRetry) { Text(stringResource(R.string.retry)) }
-    }
-}
-
-@Composable
 private fun EmptyState(query: String) {
     val message = if (query.isBlank()) {
         stringResource(R.string.empty_no_data)
@@ -358,30 +382,6 @@ private fun EmptyState(query: String) {
     CenteredMessage(message)
 }
 
-@Composable
-private fun CenteredMessage(message: String, action: @Composable () -> Unit = {}) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(PaddingValues(32.dp)),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-        )
-        action()
-    }
-}
-
-@Composable
-private fun DataError.message(): String = when (this) {
-    DataError.Network -> stringResource(R.string.error_network)
-    is DataError.Server -> stringResource(R.string.error_server, code)
-    DataError.InvalidResponse -> stringResource(R.string.error_invalid_response)
-}
-
-private val DateFormatter: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
 private val IntegerFormat: NumberFormat = NumberFormat.getIntegerInstance()
 
 @Preview(showBackground = true)
@@ -426,6 +426,7 @@ private fun StockListScreenPreview() {
             onReload = {},
             onRefreshErrorShown = {},
             onMenuClick = {},
+            onStockClick = {},
         )
     }
 }

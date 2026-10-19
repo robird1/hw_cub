@@ -5,6 +5,7 @@ import com.example.hw_cub.core.DataResult
 import com.example.hw_cub.stock.data.remote.TwseService
 import com.example.hw_cub.stock.domain.StockDay
 import com.example.hw_cub.stock.domain.StockRepository
+import com.example.hw_cub.stock.domain.StockValuation
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -14,27 +15,26 @@ import retrofit2.HttpException
 import java.io.IOException
 
 /**
- * Fetches daily quotes and monthly averages from TWSE in parallel, then
- * joins them by code off the main thread.
+ * Fetches TWSE data and maps it off the main thread.
  *
  * This is the error boundary: Retrofit and OkHttp exceptions are translated
- * to [DataError] here so they never reach the presentation layer. Both
- * requests must succeed; a failure in either fails the whole load.
+ * to [DataError] here so they never reach the presentation layer.
  */
 class DefaultStockRepository(
     private val service: TwseService,
     private val mappingDispatcher: CoroutineDispatcher,
 ) : StockRepository {
 
+    /** Both requests must succeed; a failure in either fails the whole load. */
     override suspend fun getDailyQuotes(): DataResult<List<StockDay>> =
-        try {
-            DataResult.Success(fetchQuotes())
-        } catch (e: HttpException) {
-            DataResult.Failure(DataError.Server(e.code()))
-        } catch (_: SerializationException) {
-            DataResult.Failure(DataError.InvalidResponse)
-        } catch (_: IOException) {
-            DataResult.Failure(DataError.Network)
+        safeCall { fetchQuotes() }
+
+    override suspend fun getValuation(code: String): DataResult<StockValuation?> =
+        safeCall {
+            val rows = service.getBwibbuAll()
+            withContext(mappingDispatcher) {
+                rows.firstOrNull { it.code?.trim() == code }?.toDomain()
+            }
         }
 
     private suspend fun fetchQuotes(): List<StockDay> = coroutineScope {
@@ -49,4 +49,15 @@ class DefaultStockRepository(
             }
         }
     }
+
+    private suspend fun <T> safeCall(block: suspend () -> T): DataResult<T> =
+        try {
+            DataResult.Success(block())
+        } catch (e: HttpException) {
+            DataResult.Failure(DataError.Server(e.code()))
+        } catch (_: SerializationException) {
+            DataResult.Failure(DataError.InvalidResponse)
+        } catch (_: IOException) {
+            DataResult.Failure(DataError.Network)
+        }
 }
