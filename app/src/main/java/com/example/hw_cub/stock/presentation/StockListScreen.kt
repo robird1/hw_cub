@@ -11,10 +11,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -197,6 +198,10 @@ private fun StockListContent(
     }
 }
 
+/**
+ * Stock cards in as many columns as fit [StockCardMinWidth]: one on a phone in
+ * portrait, two in landscape or on a tablet.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RefreshableStockList(
@@ -204,8 +209,8 @@ private fun RefreshableStockList(
     onRefresh: () -> Unit,
     onStockClick: (StockDay) -> Unit,
 ) {
-    val listState = rememberLazyListState()
-    ScrollToTopOnSortChange(state.sortOrder, listState)
+    val gridState = rememberLazyGridState()
+    ScrollToTopOnSortChange(state.sortOrder, gridState)
     PullToRefreshBox(
         isRefreshing = state.isLoading,
         onRefresh = onRefresh,
@@ -214,11 +219,13 @@ private fun RefreshableStockList(
         if (state.stocks.isEmpty()) {
             EmptyState(state.query)
         } else {
-            LazyColumn(
-                state = listState,
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(StockCardMinWidth),
+                state = gridState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(state.stocks, key = StockDay::code) { stock ->
                     StockCard(stock, onClick = { onStockClick(stock) })
@@ -234,12 +241,12 @@ private fun RefreshableStockList(
  * saved so returning from the detail screen keeps the scroll position.
  */
 @Composable
-private fun ScrollToTopOnSortChange(sortOrder: StockSortOrder?, listState: LazyListState) {
+private fun ScrollToTopOnSortChange(sortOrder: StockSortOrder?, gridState: LazyGridState) {
     var appliedOrder by rememberSaveable { mutableStateOf(sortOrder) }
     LaunchedEffect(sortOrder) {
         if (sortOrder != appliedOrder) {
             appliedOrder = sortOrder
-            listState.scrollToItem(0)
+            gridState.scrollToItem(0)
         }
     }
 }
@@ -473,6 +480,8 @@ private fun EmptyState(query: String) {
     }
     CenteredMessage(message)
 }
+
+private val StockCardMinWidth = 360.dp
 
 private val IntegerFormat: NumberFormat = NumberFormat.getIntegerInstance()
 

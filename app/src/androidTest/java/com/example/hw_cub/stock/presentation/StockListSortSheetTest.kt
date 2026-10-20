@@ -81,17 +81,17 @@ class StockListSortSheetTest {
                 )
             }
         }
-        assertTrue(top("2317") < top("2330"))
+        assertTrue(isBefore("2317", "2330"))
 
         openSortSheet()
         composeRule.onNodeWithText(descending).performClick()
         composeRule.waitForIdle()
-        assertTrue(top("2330") < top("2317"))
+        assertTrue(isBefore("2330", "2317"))
 
         openSortSheet()
         composeRule.onNodeWithText(ascending).performClick()
         composeRule.waitForIdle()
-        assertTrue(top("2317") < top("2330"))
+        assertTrue(isBefore("2317", "2330"))
     }
 
     private fun setScreen(
@@ -117,8 +117,15 @@ class StockListSortSheetTest {
         composeRule.waitUntil { composeRule.isShown(descending) }
     }
 
-    private fun top(code: String): Float =
-        composeRule.onNodeWithText(code).fetchSemanticsNode().positionInRoot.y
+    /** Reading order: higher row first, then left column first on wide screens. */
+    private fun isBefore(first: String, second: String): Boolean {
+        val a = position(first)
+        val b = position(second)
+        return a.y < b.y || (a.y == b.y && a.x < b.x)
+    }
+
+    private fun position(code: String) =
+        composeRule.onNodeWithText(code).fetchSemanticsNode().positionInRoot
 
     private fun string(@StringRes id: Int): String = composeRule.activity.getString(id)
 
