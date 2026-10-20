@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Loads the daily quote list and filters it by the search query. */
+/** Loads the daily quote list, filters it by the search query and sorts it. */
 class StockListViewModel(
     private val repository: StockRepository,
 ) : ViewModel() {
@@ -49,7 +49,13 @@ class StockListViewModel(
 
     fun onQueryChange(query: String) {
         _uiState.update {
-            it.copy(query = query, stocks = allStocks.matching(query))
+            it.copy(query = query, stocks = visibleStocks(query, it.sortOrder))
+        }
+    }
+
+    fun onSortOrderChange(order: StockSortOrder) {
+        _uiState.update {
+            it.copy(sortOrder = order, stocks = visibleStocks(it.query, order))
         }
     }
 
@@ -61,13 +67,16 @@ class StockListViewModel(
         allStocks = stocks
         _uiState.update {
             it.copy(
-                stocks = stocks.matching(it.query),
+                stocks = visibleStocks(it.query, it.sortOrder),
                 tradeDate = stocks.firstNotNullOfOrNull(StockDay::date),
                 isLoading = false,
                 hasLoaded = true,
             )
         }
     }
+
+    private fun visibleStocks(query: String, order: StockSortOrder?): List<StockDay> =
+        allStocks.matching(query).sortedIn(order)
 }
 
 private fun List<StockDay>.matching(query: String): List<StockDay> {

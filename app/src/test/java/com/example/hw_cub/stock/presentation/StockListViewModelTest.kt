@@ -128,6 +128,34 @@ class StockListViewModelTest {
     }
 
     @Test
+    fun `sort order sorts by code and defaults to response order`() = runTest(dispatcher) {
+        val viewModel = loadedViewModel(listOf(foxconn, etf, tsmc))
+        assertNull(viewModel.uiState.value.sortOrder)
+        assertEquals(listOf(foxconn, etf, tsmc), viewModel.uiState.value.stocks)
+
+        viewModel.onSortOrderChange(StockSortOrder.CodeDescending)
+        assertEquals(StockSortOrder.CodeDescending, viewModel.uiState.value.sortOrder)
+        assertEquals(listOf(tsmc, foxconn, etf), viewModel.uiState.value.stocks)
+
+        viewModel.onSortOrderChange(StockSortOrder.CodeAscending)
+        assertEquals(listOf(etf, foxconn, tsmc), viewModel.uiState.value.stocks)
+    }
+
+    @Test
+    fun `sort order applies to filtered results and survives a reload`() = runTest(dispatcher) {
+        val viewModel = loadedViewModel(listOf(foxconn, etf, tsmc))
+        viewModel.onSortOrderChange(StockSortOrder.CodeDescending)
+
+        viewModel.onQueryChange("23")
+        assertEquals(listOf(tsmc, foxconn), viewModel.uiState.value.stocks)
+
+        viewModel.load()
+        repository.complete(DataResult.Success(listOf(foxconn, tsmc)))
+        advanceUntilIdle()
+        assertEquals(listOf(tsmc, foxconn), viewModel.uiState.value.stocks)
+    }
+
+    @Test
     fun `load while a load is running is ignored`() = runTest(dispatcher) {
         val viewModel = StockListViewModel(repository)
         advanceUntilIdle()
@@ -141,6 +169,7 @@ class StockListViewModelTest {
 
     private val tsmc = stock("2330", "台積電")
     private val foxconn = stock("2317", "鴻海")
+    private val etf = stock("0050", "元大台灣50")
 
     private fun stock(code: String, name: String) = StockDay(
         code = code,

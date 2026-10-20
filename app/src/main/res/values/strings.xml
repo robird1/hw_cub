@@ -32,4 +32,6 @@
     <string name="pb_ratio">P/B ratio</string>
     <string name="data_date">Data date: %1$s</string>
     <string name="valuation_missing">TWSE publishes no P/E, dividend yield or P/B data for this security (for example, ETFs).</string>
+    <string name="sort_code_descending">Sort by stock code, descending</string>
+    <string name="sort_code_ascending">Sort by stock code, ascending</string>
 </resources>

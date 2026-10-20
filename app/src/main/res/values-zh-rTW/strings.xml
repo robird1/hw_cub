@@ -30,4 +30,6 @@
     <string name="pb_ratio">股價淨值比</string>
     <string name="data_date">資料日期：%1$s</string>
     <string name="valuation_missing">證交所未提供此證券的本益比、殖利率及股價淨值比資料（例如 ETF）。</string>
+    <string name="sort_code_descending">依股票代號降序</string>
+    <string name="sort_code_ascending">依股票代號升序</string>
 </resources>

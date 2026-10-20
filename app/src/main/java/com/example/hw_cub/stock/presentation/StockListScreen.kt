@@ -1,5 +1,6 @@
 package com.example.hw_cub.stock.presentation
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -20,7 +25,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -30,15 +38,21 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -52,6 +66,7 @@ import com.example.hw_cub.core.DataError
 import com.example.hw_cub.stock.domain.StockDay
 import com.example.hw_cub.ui.theme.HwCubTheme
 import com.example.hw_cub.ui.theme.LocalPriceColors
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -72,13 +87,16 @@ fun StockListRoute(
         onQueryChange = viewModel::onQueryChange,
         onReload = viewModel::load,
         onRefreshErrorShown = viewModel::onRefreshErrorShown,
-        // Menu behavior is not defined yet; the button is visual only for now.
-        onMenuClick = {},
+        onSortOrderChange = viewModel::onSortOrderChange,
         onStockClick = onStockClick,
     )
 }
 
-/** Stateless stock list: search field plus loading, error, empty or list content. */
+/**
+ * Stateless stock list: search field plus loading, error, empty or list content.
+ *
+ * The menu button opens a bottom sheet for choosing [StockListUiState.sortOrder].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockListScreen(
@@ -86,11 +104,12 @@ fun StockListScreen(
     onQueryChange: (String) -> Unit,
     onReload: () -> Unit,
     onRefreshErrorShown: () -> Unit,
-    onMenuClick: () -> Unit,
+    onSortOrderChange: (StockSortOrder) -> Unit,
     onStockClick: (StockDay) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    var showSortSheet by rememberSaveable { mutableStateOf(false) }
     RefreshErrorSnackbar(state.refreshError, snackbarHostState, onReload, onRefreshErrorShown)
 
     Scaffold(
@@ -98,7 +117,7 @@ fun StockListScreen(
         topBar = {
             TopAppBar(
                 title = { StockListTitle(state.tradeDate) },
-                actions = { MenuButton(onMenuClick) },
+                actions = { MenuButton(onClick = { showSortSheet = true }) },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -108,7 +127,61 @@ fun StockListScreen(
             StockListContent(state, onReload, onStockClick)
         }
     }
+
+    if (showSortSheet) {
+        SortOrderSheet(
+            selected = state.sortOrder,
+            onSelect = onSortOrderChange,
+            onDismiss = { showSortSheet = false },
+        )
+    }
 }
+
+/** Bottom sheet listing the sort orders; picking one applies it and closes the sheet. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SortOrderSheet(
+    selected: StockSortOrder?,
+    onSelect: (StockSortOrder) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(Modifier.selectableGroup().padding(bottom = 16.dp)) {
+            StockSortOrder.entries.forEach { order ->
+                SortOrderItem(order, isSelected = order == selected) {
+                    onSelect(order)
+                    scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SortOrderItem(order: StockSortOrder, isSelected: Boolean, onClick: () -> Unit) {
+    ListItem(
+        headlineContent = { Text(stringResource(order.labelRes)) },
+        trailingContent = if (isSelected) {
+            { Icon(painterResource(R.drawable.ic_check), contentDescription = null) }
+        } else {
+            null
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        modifier = Modifier.selectable(
+            selected = isSelected,
+            onClick = onClick,
+            role = Role.RadioButton,
+        ),
+    )
+}
+
+private val StockSortOrder.labelRes: Int
+    @StringRes get() = when (this) {
+        StockSortOrder.CodeDescending -> R.string.sort_code_descending
+        StockSortOrder.CodeAscending -> R.string.sort_code_ascending
+    }
 
 @Composable
 private fun StockListContent(
@@ -131,6 +204,8 @@ private fun RefreshableStockList(
     onRefresh: () -> Unit,
     onStockClick: (StockDay) -> Unit,
 ) {
+    val listState = rememberLazyListState()
+    ScrollToTopOnSortChange(state.sortOrder, listState)
     PullToRefreshBox(
         isRefreshing = state.isLoading,
         onRefresh = onRefresh,
@@ -140,6 +215,7 @@ private fun RefreshableStockList(
             EmptyState(state.query)
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -148,6 +224,22 @@ private fun RefreshableStockList(
                     StockCard(stock, onClick = { onStockClick(stock) })
                 }
             }
+        }
+    }
+}
+
+/**
+ * Jumps to the first item after the sort order changes, so the list does not
+ * stay anchored to whichever stock was visible. The last applied order is
+ * saved so returning from the detail screen keeps the scroll position.
+ */
+@Composable
+private fun ScrollToTopOnSortChange(sortOrder: StockSortOrder?, listState: LazyListState) {
+    var appliedOrder by rememberSaveable { mutableStateOf(sortOrder) }
+    LaunchedEffect(sortOrder) {
+        if (sortOrder != appliedOrder) {
+            appliedOrder = sortOrder
+            listState.scrollToItem(0)
         }
     }
 }
@@ -425,7 +517,7 @@ private fun StockListScreenPreview() {
             onQueryChange = {},
             onReload = {},
             onRefreshErrorShown = {},
-            onMenuClick = {},
+            onSortOrderChange = {},
             onStockClick = {},
         )
     }
