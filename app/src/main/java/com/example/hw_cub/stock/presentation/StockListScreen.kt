@@ -273,11 +273,12 @@ private fun RefreshErrorSnackbar(
 
 @Composable
 private fun StockListTitle(tradeDate: LocalDate?) {
+    val dateFormatter = rememberDateFormatter()
     Column {
         Text(stringResource(R.string.stock_list_title))
         if (tradeDate != null) {
             Text(
-                text = stringResource(R.string.trade_date, tradeDate.format(DateFormatter)),
+                text = stringResource(R.string.trade_date, tradeDate.format(dateFormatter)),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -431,19 +432,20 @@ private fun ClosingPriceText(stock: StockDay) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TradeSummary(stock: StockDay) {
+    val integerFormat = rememberIntegerFormat()
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        SummaryItem(stringResource(R.string.transactions), stock.transactions)
-        SummaryItem(stringResource(R.string.trade_volume), stock.tradeVolume)
-        SummaryItem(stringResource(R.string.trade_value), stock.tradeValue)
+        SummaryItem(stringResource(R.string.transactions), stock.transactions, integerFormat)
+        SummaryItem(stringResource(R.string.trade_volume), stock.tradeVolume, integerFormat)
+        SummaryItem(stringResource(R.string.trade_value), stock.tradeValue, integerFormat)
     }
 }
 
 @Composable
-private fun SummaryItem(label: String, value: Long?) {
+private fun SummaryItem(label: String, value: Long?, format: NumberFormat) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = label,
@@ -451,7 +453,7 @@ private fun SummaryItem(label: String, value: Long?) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
-            text = value?.let(IntegerFormat::format) ?: stringResource(R.string.not_available),
+            text = value?.let(format::format) ?: stringResource(R.string.not_available),
             style = MaterialTheme.typography.bodySmall,
         )
     }
@@ -485,8 +487,6 @@ private fun EmptyState(query: String) {
 }
 
 private val StockCardMinWidth = 360.dp
-
-private val IntegerFormat: NumberFormat = NumberFormat.getIntegerInstance()
 
 @Preview(showBackground = true)
 @Composable

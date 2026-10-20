@@ -122,6 +122,7 @@ private fun DetailTitle(code: String, name: String) {
 
 @Composable
 private fun ValuationContent(valuation: StockValuation) {
+    val dateFormatter = rememberDateFormatter()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -134,7 +135,7 @@ private fun ValuationContent(valuation: StockValuation) {
         RatioCard(stringResource(R.string.pb_ratio), valuation.pbRatio)
         valuation.date?.let {
             Text(
-                text = stringResource(R.string.data_date, it.format(DateFormatter)),
+                text = stringResource(R.string.data_date, it.format(dateFormatter)),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.End),

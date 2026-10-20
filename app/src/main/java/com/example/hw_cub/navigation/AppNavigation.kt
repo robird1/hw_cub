@@ -29,9 +29,12 @@ data class StockDetailKey(val code: String, val name: String) : NavKey
 @Composable
 fun AppNavigation() {
     val backStack = rememberNavBackStack(StockListKey)
+    // Taps can arrive twice before a transition finishes, so both actions
+    // check where the back stack is instead of trusting the tap.
+    val goBack = { if (backStack.size > 1) backStack.removeLastOrNull() }
     NavDisplay(
         backStack = backStack,
-        onBack = { backStack.removeLastOrNull() },
+        onBack = { goBack() },
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
@@ -40,7 +43,9 @@ fun AppNavigation() {
             entry<StockListKey> {
                 StockListRoute(
                     onStockClick = { stock ->
-                        backStack.add(StockDetailKey(stock.code, stock.name))
+                        if (backStack.lastOrNull() == StockListKey) {
+                            backStack.add(StockDetailKey(stock.code, stock.name))
+                        }
                     },
                 )
             }
@@ -48,7 +53,7 @@ fun AppNavigation() {
                 StockDetailRoute(
                     code = key.code,
                     name = key.name,
-                    onBack = { backStack.removeLastOrNull() },
+                    onBack = { goBack() },
                 )
             }
         },

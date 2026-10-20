@@ -1,5 +1,6 @@
 package com.example.hw_cub.stock.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import com.example.hw_cub.core.DataError
 import com.example.hw_cub.core.DataResult
 import com.example.hw_cub.stock.domain.model.StockDay
@@ -38,8 +39,12 @@ class StockListViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun newViewModel() =
-        StockListViewModel(GetDailyQuotesUseCase(repository), FilterAndSortStocksUseCase())
+    private fun newViewModel(savedStateHandle: SavedStateHandle = SavedStateHandle()) =
+        StockListViewModel(
+            GetDailyQuotesUseCase(repository),
+            FilterAndSortStocksUseCase(),
+            savedStateHandle,
+        )
 
     private fun TestScope.loadedViewModel(stocks: List<StockDay>): StockListViewModel {
         val viewModel = newViewModel()
@@ -159,6 +164,27 @@ class StockListViewModelTest {
         repository.complete(DataResult.Success(listOf(foxconn, tsmc)))
         advanceUntilIdle()
         assertEquals(listOf(tsmc, foxconn), viewModel.uiState.value.stocks)
+    }
+
+    @Test
+    fun `query and sort order survive process death`() = runTest(dispatcher) {
+        val savedStateHandle = SavedStateHandle()
+        val before = newViewModel(savedStateHandle)
+        repository.complete(DataResult.Success(listOf(foxconn, etf, tsmc)))
+        advanceUntilIdle()
+        before.onQueryChange("23")
+        before.onSortOrderChange(StockSortOrder.CodeDescending)
+
+        // A fresh handle with only the saved values, as Android rebuilds it.
+        val savedValues = savedStateHandle.keys().associateWith { savedStateHandle.get<Any>(it) }
+        val restored = newViewModel(SavedStateHandle(savedValues))
+        repository.complete(DataResult.Success(listOf(foxconn, etf, tsmc)))
+        advanceUntilIdle()
+
+        val state = restored.uiState.value
+        assertEquals("23", state.query)
+        assertEquals(StockSortOrder.CodeDescending, state.sortOrder)
+        assertEquals(listOf(tsmc, foxconn), state.stocks)
     }
 
     @Test
