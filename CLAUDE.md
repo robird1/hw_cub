@@ -21,6 +21,8 @@ the kit's MVI/`BaseViewModel` and Ktor conventions.
 1. Prefer state hoisting in Compose. Use `StateFlow` in ViewModels.
 2. Use UI state classes (e.g., `LoginUiState`) instead of multiple
    independent states.
+3. Add unit tests for every ViewModel, repository and mapper change; add
+   Compose UI tests for new interactive UI.
 
 ## Coding Style
 
