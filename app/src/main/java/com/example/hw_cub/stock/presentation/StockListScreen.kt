@@ -213,7 +213,7 @@ private fun RefreshableStockList(
     onStockClick: (StockDay) -> Unit,
 ) {
     val gridState = rememberLazyGridState()
-    ScrollToTopOnSortChange(state.sortOrder, gridState)
+    ScrollToTopOnResultsChange(state.query, state.sortOrder, gridState)
     PullToRefreshBox(
         isRefreshing = state.isLoading,
         onRefresh = onRefresh,
@@ -239,15 +239,24 @@ private fun RefreshableStockList(
 }
 
 /**
- * Jumps to the first item after the sort order changes, so the list does not
- * stay anchored to whichever stock was visible. The last applied order is
- * saved so returning from the detail screen keeps the scroll position.
+ * Jumps to the first item after the search query or sort order changes.
+ *
+ * A lazy grid keeps its place by item key, so without this the list stays
+ * anchored to whichever stock was visible, e.g. deep in the full list after
+ * the search is cleared. The last applied values are saved so rotation,
+ * process death and returning from the detail screen keep the scroll position.
  */
 @Composable
-private fun ScrollToTopOnSortChange(sortOrder: StockSortOrder?, gridState: LazyGridState) {
+private fun ScrollToTopOnResultsChange(
+    query: String,
+    sortOrder: StockSortOrder?,
+    gridState: LazyGridState,
+) {
+    var appliedQuery by rememberSaveable { mutableStateOf(query) }
     var appliedOrder by rememberSaveable { mutableStateOf(sortOrder) }
-    LaunchedEffect(sortOrder) {
-        if (sortOrder != appliedOrder) {
+    LaunchedEffect(query, sortOrder) {
+        if (query != appliedQuery || sortOrder != appliedOrder) {
+            appliedQuery = query
             appliedOrder = sortOrder
             gridState.scrollToItem(0)
         }

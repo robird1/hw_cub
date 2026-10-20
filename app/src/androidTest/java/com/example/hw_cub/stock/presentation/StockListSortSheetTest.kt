@@ -16,7 +16,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.hw_cub.R
-import com.example.hw_cub.stock.domain.model.StockDay
 import com.example.hw_cub.stock.domain.model.StockSortOrder
 import com.example.hw_cub.stock.domain.usecase.FilterAndSortStocksUseCase
 import com.example.hw_cub.ui.theme.HwCubTheme
@@ -141,21 +140,6 @@ class StockListSortSheetTest {
         sortOrder = sortOrder,
         tradeDate = LocalDate.of(2026, 10, 16),
         hasLoaded = true,
-    )
-
-    private fun stock(code: String, name: String) = StockDay(
-        code = code,
-        name = name,
-        date = LocalDate.of(2026, 10, 16),
-        tradeVolume = null,
-        tradeValue = null,
-        openingPrice = null,
-        highestPrice = null,
-        lowestPrice = null,
-        closingPrice = null,
-        change = null,
-        monthlyAveragePrice = null,
-        transactions = null,
     )
 }
 
