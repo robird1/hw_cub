@@ -1,4 +1,4 @@
-package com.example.hw_cub.stock.domain
+package com.example.hw_cub.stock.domain.model
 
 import java.math.BigDecimal
 import java.time.LocalDate

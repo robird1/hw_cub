@@ -1,6 +1,8 @@
-package com.example.hw_cub.stock.domain
+package com.example.hw_cub.stock.domain.repository
 
 import com.example.hw_cub.core.DataResult
+import com.example.hw_cub.stock.domain.model.StockDay
+import com.example.hw_cub.stock.domain.model.StockValuation
 
 /** Source of daily trading data for listed securities. */
 interface StockRepository {

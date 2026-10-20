@@ -2,9 +2,10 @@ package com.example.hw_cub.stock.presentation
 
 import com.example.hw_cub.core.DataError
 import com.example.hw_cub.core.DataResult
-import com.example.hw_cub.stock.domain.StockDay
-import com.example.hw_cub.stock.domain.StockRepository
-import com.example.hw_cub.stock.domain.StockValuation
+import com.example.hw_cub.stock.domain.model.StockDay
+import com.example.hw_cub.stock.domain.model.StockValuation
+import com.example.hw_cub.stock.domain.repository.StockRepository
+import com.example.hw_cub.stock.domain.usecase.GetStockValuationUseCase
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,7 +37,7 @@ class StockDetailViewModelTest {
 
     @Test
     fun `loads the valuation for its code`() = runTest(dispatcher) {
-        val viewModel = StockDetailViewModel("2330", repository)
+        val viewModel = StockDetailViewModel("2330", GetStockValuationUseCase(repository))
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value.isLoading)
 
@@ -53,7 +54,7 @@ class StockDetailViewModelTest {
 
     @Test
     fun `no data for the code is missing, not an error`() = runTest(dispatcher) {
-        val viewModel = StockDetailViewModel("00400A", repository)
+        val viewModel = StockDetailViewModel("00400A", GetStockValuationUseCase(repository))
         repository.complete(DataResult.Success(null))
         advanceUntilIdle()
 
@@ -65,7 +66,7 @@ class StockDetailViewModelTest {
 
     @Test
     fun `failure shows the error, and retry recovers`() = runTest(dispatcher) {
-        val viewModel = StockDetailViewModel("2330", repository)
+        val viewModel = StockDetailViewModel("2330", GetStockValuationUseCase(repository))
         repository.complete(DataResult.Failure(DataError.Network))
         advanceUntilIdle()
 
@@ -82,7 +83,7 @@ class StockDetailViewModelTest {
 
     @Test
     fun `load while a load is running is ignored`() = runTest(dispatcher) {
-        val viewModel = StockDetailViewModel("2330", repository)
+        val viewModel = StockDetailViewModel("2330", GetStockValuationUseCase(repository))
         advanceUntilIdle()
 
         viewModel.load()

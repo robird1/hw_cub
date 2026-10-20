@@ -3,9 +3,9 @@ package com.example.hw_cub.stock.data
 import com.example.hw_cub.core.DataError
 import com.example.hw_cub.core.DataResult
 import com.example.hw_cub.stock.data.remote.TwseService
-import com.example.hw_cub.stock.domain.StockDay
-import com.example.hw_cub.stock.domain.StockRepository
-import com.example.hw_cub.stock.domain.StockValuation
+import com.example.hw_cub.stock.domain.model.StockDay
+import com.example.hw_cub.stock.domain.model.StockValuation
+import com.example.hw_cub.stock.domain.repository.StockRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope

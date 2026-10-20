@@ -1,7 +1,7 @@
 package com.example.hw_cub.stock.presentation
 
 import com.example.hw_cub.core.DataError
-import com.example.hw_cub.stock.domain.StockValuation
+import com.example.hw_cub.stock.domain.model.StockValuation
 
 /**
  * Everything the stock detail screen renders.

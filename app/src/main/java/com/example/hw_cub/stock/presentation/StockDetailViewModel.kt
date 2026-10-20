@@ -3,7 +3,7 @@ package com.example.hw_cub.stock.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hw_cub.core.DataResult
-import com.example.hw_cub.stock.domain.StockRepository
+import com.example.hw_cub.stock.domain.usecase.GetStockValuationUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 /** Loads valuation ratios for the security identified by [code]. */
 class StockDetailViewModel(
     private val code: String,
-    private val repository: StockRepository,
+    private val getStockValuation: GetStockValuationUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StockDetailUiState())
@@ -32,7 +32,7 @@ class StockDetailViewModel(
         loadJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             _uiState.update { state ->
-                when (val result = repository.getValuation(code)) {
+                when (val result = getStockValuation(code)) {
                     is DataResult.Success -> state.copy(
                         valuation = result.data,
                         isMissing = result.data == null,

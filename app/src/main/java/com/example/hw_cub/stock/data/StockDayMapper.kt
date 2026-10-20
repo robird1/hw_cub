@@ -3,8 +3,8 @@ package com.example.hw_cub.stock.data
 import com.example.hw_cub.stock.data.remote.StockDayAvgDto
 import com.example.hw_cub.stock.data.remote.StockDayDto
 import com.example.hw_cub.stock.data.remote.StockValuationDto
-import com.example.hw_cub.stock.domain.StockDay
-import com.example.hw_cub.stock.domain.StockValuation
+import com.example.hw_cub.stock.domain.model.StockDay
+import com.example.hw_cub.stock.domain.model.StockValuation
 import java.math.BigDecimal
 import java.time.DateTimeException
 import java.time.LocalDate

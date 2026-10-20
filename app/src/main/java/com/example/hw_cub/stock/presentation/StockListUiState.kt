@@ -1,7 +1,8 @@
 package com.example.hw_cub.stock.presentation
 
 import com.example.hw_cub.core.DataError
-import com.example.hw_cub.stock.domain.StockDay
+import com.example.hw_cub.stock.domain.model.StockDay
+import com.example.hw_cub.stock.domain.model.StockSortOrder
 import java.time.LocalDate
 
 /**

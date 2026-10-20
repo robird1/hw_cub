@@ -3,8 +3,10 @@ package com.example.hw_cub.stock.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hw_cub.core.DataResult
-import com.example.hw_cub.stock.domain.StockDay
-import com.example.hw_cub.stock.domain.StockRepository
+import com.example.hw_cub.stock.domain.model.StockDay
+import com.example.hw_cub.stock.domain.model.StockSortOrder
+import com.example.hw_cub.stock.domain.usecase.FilterAndSortStocksUseCase
+import com.example.hw_cub.stock.domain.usecase.GetDailyQuotesUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +16,8 @@ import kotlinx.coroutines.launch
 
 /** Loads the daily quote list, filters it by the search query and sorts it. */
 class StockListViewModel(
-    private val repository: StockRepository,
+    private val getDailyQuotes: GetDailyQuotesUseCase,
+    private val filterAndSortStocks: FilterAndSortStocksUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StockListUiState())
@@ -34,7 +37,7 @@ class StockListViewModel(
             _uiState.update {
                 it.copy(isLoading = true, loadError = null, refreshError = null)
             }
-            when (val result = repository.getDailyQuotes()) {
+            when (val result = getDailyQuotes()) {
                 is DataResult.Success -> onLoaded(result.data)
                 is DataResult.Failure -> _uiState.update {
                     if (it.hasLoaded) {
@@ -76,14 +79,5 @@ class StockListViewModel(
     }
 
     private fun visibleStocks(query: String, order: StockSortOrder?): List<StockDay> =
-        allStocks.matching(query).sortedIn(order)
-}
-
-private fun List<StockDay>.matching(query: String): List<StockDay> {
-    val term = query.trim()
-    if (term.isEmpty()) return this
-    return filter {
-        it.code.startsWith(term, ignoreCase = true) ||
-            it.name.contains(term, ignoreCase = true)
-    }
+        filterAndSortStocks(allStocks, query, order)
 }

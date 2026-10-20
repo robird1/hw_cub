@@ -16,7 +16,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.hw_cub.R
-import com.example.hw_cub.stock.domain.StockDay
+import com.example.hw_cub.stock.domain.model.StockDay
+import com.example.hw_cub.stock.domain.model.StockSortOrder
+import com.example.hw_cub.stock.domain.usecase.FilterAndSortStocksUseCase
 import com.example.hw_cub.ui.theme.HwCubTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -131,7 +133,11 @@ class StockListSortSheetTest {
 
     /** Response order is 2317, 2330; a sort order rearranges it like the ViewModel does. */
     private fun loadedState(sortOrder: StockSortOrder?) = StockListUiState(
-        stocks = listOf(stock("2317", "鴻海"), stock("2330", "台積電")).sortedIn(sortOrder),
+        stocks = FilterAndSortStocksUseCase()(
+            listOf(stock("2317", "鴻海"), stock("2330", "台積電")),
+            query = "",
+            order = sortOrder,
+        ),
         sortOrder = sortOrder,
         tradeDate = LocalDate.of(2026, 10, 16),
         hasLoaded = true,

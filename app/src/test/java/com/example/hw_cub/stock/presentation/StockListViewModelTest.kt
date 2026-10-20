@@ -2,9 +2,12 @@ package com.example.hw_cub.stock.presentation
 
 import com.example.hw_cub.core.DataError
 import com.example.hw_cub.core.DataResult
-import com.example.hw_cub.stock.domain.StockDay
-import com.example.hw_cub.stock.domain.StockRepository
-import com.example.hw_cub.stock.domain.StockValuation
+import com.example.hw_cub.stock.domain.model.StockDay
+import com.example.hw_cub.stock.domain.model.StockSortOrder
+import com.example.hw_cub.stock.domain.model.StockValuation
+import com.example.hw_cub.stock.domain.repository.StockRepository
+import com.example.hw_cub.stock.domain.usecase.FilterAndSortStocksUseCase
+import com.example.hw_cub.stock.domain.usecase.GetDailyQuotesUseCase
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,8 +38,11 @@ class StockListViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
+    private fun newViewModel() =
+        StockListViewModel(GetDailyQuotesUseCase(repository), FilterAndSortStocksUseCase())
+
     private fun TestScope.loadedViewModel(stocks: List<StockDay>): StockListViewModel {
-        val viewModel = StockListViewModel(repository)
+        val viewModel = newViewModel()
         repository.complete(DataResult.Success(stocks))
         advanceUntilIdle()
         return viewModel
@@ -44,7 +50,7 @@ class StockListViewModelTest {
 
     @Test
     fun `cold load shows loading, then the stocks and trade date`() = runTest(dispatcher) {
-        val viewModel = StockListViewModel(repository)
+        val viewModel = newViewModel()
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.isLoading)
@@ -62,7 +68,7 @@ class StockListViewModelTest {
 
     @Test
     fun `cold load failure shows load error, and retry recovers`() = runTest(dispatcher) {
-        val viewModel = StockListViewModel(repository)
+        val viewModel = newViewModel()
         repository.complete(DataResult.Failure(DataError.Network))
         advanceUntilIdle()
 
@@ -157,7 +163,7 @@ class StockListViewModelTest {
 
     @Test
     fun `load while a load is running is ignored`() = runTest(dispatcher) {
-        val viewModel = StockListViewModel(repository)
+        val viewModel = newViewModel()
         advanceUntilIdle()
 
         viewModel.load()

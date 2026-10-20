@@ -64,7 +64,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hw_cub.R
 import com.example.hw_cub.core.DataError
-import com.example.hw_cub.stock.domain.StockDay
+import com.example.hw_cub.stock.domain.model.PriceTrend
+import com.example.hw_cub.stock.domain.model.StockDay
+import com.example.hw_cub.stock.domain.model.StockSortOrder
+import com.example.hw_cub.stock.domain.model.closeVersusMonthlyAverage
 import com.example.hw_cub.ui.theme.HwCubTheme
 import com.example.hw_cub.ui.theme.LocalPriceColors
 import kotlinx.coroutines.launch

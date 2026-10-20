@@ -3,7 +3,10 @@ package com.example.hw_cub.di
 import com.example.hw_cub.BuildConfig
 import com.example.hw_cub.stock.data.DefaultStockRepository
 import com.example.hw_cub.stock.data.remote.TwseService
-import com.example.hw_cub.stock.domain.StockRepository
+import com.example.hw_cub.stock.domain.repository.StockRepository
+import com.example.hw_cub.stock.domain.usecase.FilterAndSortStocksUseCase
+import com.example.hw_cub.stock.domain.usecase.GetDailyQuotesUseCase
+import com.example.hw_cub.stock.domain.usecase.GetStockValuationUseCase
 import com.example.hw_cub.stock.presentation.StockDetailViewModel
 import com.example.hw_cub.stock.presentation.StockListViewModel
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +14,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -46,9 +50,12 @@ val networkModule = module {
     single { get<Retrofit>().create(TwseService::class.java) }
 }
 
-/** Stock feature: repository and the list and detail ViewModels. */
+/** Stock feature: repository, use cases and the list and detail ViewModels. */
 val stockModule = module {
     single<StockRepository> { DefaultStockRepository(get(), Dispatchers.Default) }
+    factoryOf(::GetDailyQuotesUseCase)
+    factoryOf(::GetStockValuationUseCase)
+    factoryOf(::FilterAndSortStocksUseCase)
     viewModelOf(::StockListViewModel)
     viewModel { (code: String) -> StockDetailViewModel(code, get()) }
 }
